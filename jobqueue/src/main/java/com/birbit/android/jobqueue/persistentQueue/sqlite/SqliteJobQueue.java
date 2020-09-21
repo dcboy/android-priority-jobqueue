@@ -64,9 +64,10 @@ public class SqliteJobQueue implements JobQueue {
   }
 
   private void cleanupFiles() {
-    Cursor cursor = db.rawQuery(sqlHelper.LOAD_ALL_IDS_QUERY, null);
+    Cursor cursor = null;
     Set<String> jobIds = new HashSet<>();
     try {
+      cursor = db.rawQuery(sqlHelper.LOAD_ALL_IDS_QUERY, null);
       while (cursor.moveToNext()) {
         jobIds.add(cursor.getString(0));
       }
@@ -246,8 +247,9 @@ public class SqliteJobQueue implements JobQueue {
    */
   @Override
   public JobHolder findJobById(@NonNull String id) {
-    Cursor cursor = db.rawQuery(sqlHelper.FIND_BY_ID_QUERY, new String[]{id});
+    Cursor cursor = null;
     try {
+      cursor = db.rawQuery(sqlHelper.FIND_BY_ID_QUERY, new String[]{id});
       if (!cursor.moveToFirst()) {
         if (cursor != null) {
           cursor.close();
@@ -274,9 +276,10 @@ public class SqliteJobQueue implements JobQueue {
   public Set<JobHolder> findJobs(@NonNull Constraint constraint) {
     final Where where = createWhere(constraint);
     String selectQuery = where.findJobs(sqlHelper);
-    Cursor cursor = db.rawQuery(selectQuery, where.args);
     Set<JobHolder> jobs = new HashSet<>();
+    Cursor cursor = null;
     try {
+      cursor = db.rawQuery(selectQuery, where.args);
       while (cursor.moveToNext()) {
         jobs.add(createJobHolderFromCursor(cursor));
       }
@@ -311,9 +314,11 @@ public class SqliteJobQueue implements JobQueue {
     final Where where = createWhere(constraint);
     //we can even keep these prepared but not sure the cost of them in db layer
     final String selectQuery = where.nextJob(sqlHelper);
+
+    Cursor cursor = null;
     while (true) {
-      Cursor cursor = db.rawQuery(selectQuery, where.args);
       try {
+        cursor = db.rawQuery(selectQuery, where.args);
         if (!cursor.moveToNext()) {
           if (cursor != null) {
             cursor.close();
@@ -410,8 +415,9 @@ public class SqliteJobQueue implements JobQueue {
             SqlHelper.Order.Type.ASC),
         new SqlHelper.Order(DbOpenHelper.INSERTION_ORDER_COLUMN, SqlHelper.Order.Type.ASC)
     );
-    Cursor cursor = db.rawQuery(select, new String[0]);
+    Cursor cursor = null;
     try {
+      cursor = db.rawQuery(select, new String[0]);
       while (cursor.moveToNext()) {
         String id = cursor.getString(DbOpenHelper.ID_COLUMN.columnIndex);
         sb.append(cursor.getLong(DbOpenHelper.INSERTION_ORDER_COLUMN.columnIndex))
@@ -486,8 +492,9 @@ public class SqliteJobQueue implements JobQueue {
   }
 
   private Set<String> loadTags(String jobId) {
-    Cursor cursor = db.rawQuery(sqlHelper.LOAD_TAGS_QUERY, new String[]{jobId});
+    Cursor cursor = null;
     try {
+      cursor = db.rawQuery(sqlHelper.LOAD_TAGS_QUERY, new String[]{jobId});
       if (cursor.getCount() == 0) {
         //noinspection unchecked
         if (cursor != null) {
